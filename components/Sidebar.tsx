@@ -1,0 +1,86 @@
+'use client';
+
+import React from 'react';
+import { Plus, History, Wallet, FileText, Menu, X } from 'lucide-react';
+
+interface SidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+  const navItems = [
+    { icon: Plus, label: 'New Task', active: true },
+    { icon: History, label: 'History', active: false },
+    { icon: Wallet, label: 'Wallet', active: false },
+    { icon: FileText, label: 'Docs', active: false },
+  ];
+
+  return (
+    <>
+      {/* Mobile toggle button */}
+      <button
+        onClick={onToggle}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg glass text-white hover:bg-primary/20 transition-colors"
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
+          onClick={onToggle}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed lg:sticky top-0 left-0 h-screen
+          w-64 lg:w-20 
+          bg-dark-800 border-r border-primary/20
+          transition-transform duration-300 z-40
+          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        {/* Logo */}
+        <div className="p-4 lg:p-6 border-b border-primary/20">
+          {/* <div className="flex items-center gap-3 lg:justify-center">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center glow-primary">
+              <span className="text-xl font-bold">H</span>
+            </div>
+            <span className="lg:hidden text-xl font-bold gradient-text">HyperTask</span>
+          </div> */}
+          <br />
+        </div>
+
+        {/* Navigation */}
+        <nav className="p-4 space-y-2">
+          {navItems.map((item, index) => (
+            <button
+              key={index}
+              className={`
+                w-full flex items-center gap-3 lg:justify-center
+                p-3 rounded-lg transition-all duration-300
+                ${item.active 
+                  ? 'bg-primary text-white shadow-lg shadow-primary/50' 
+                  : 'text-gray-400 hover:bg-dark-700 hover:text-white'
+                }
+              `}
+            >
+              <span className="lg:hidden font-medium">{item.label}</span>
+              <item.icon size={20} />
+              {/* <item.label /> */}
+            </button>
+          ))}
+        </nav>
+
+        {/* Bottom section - visible on desktop only */}
+        <div className="hidden lg:block absolute bottom-0 left-0 right-0 p-4 border-t border-primary/20">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary mx-auto" />
+        </div>
+      </aside>
+    </>
+  );
+}

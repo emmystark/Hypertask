@@ -160,7 +160,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex animated-bg cyber-grid-bg">
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
         <Header
@@ -185,7 +184,7 @@ export default function Home() {
                       tasks={currentProject.tasks}
                       deliverables={currentProject.deliverables}
                       onApprove={handleApproveFromExecution}
-                    />
+                      />
                   </div>
 
                   {/* Sidebar Panels */}
@@ -205,6 +204,7 @@ export default function Home() {
             </div>
           )}
         </main>
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
       {/* Modals */}

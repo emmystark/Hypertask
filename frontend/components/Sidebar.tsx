@@ -18,8 +18,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <button
+      <div className='fixed'>
+        {/* Mobile toggle button */}
+      <div className='z-0'>
+        <button
         onClick={onToggle}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg glass text-white hover:bg-primary/20 transition-colors"
       >
@@ -69,9 +71,8 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 }
               `}
             >
-              <span className="lg:hidden font-medium">{item.label}</span>
               <item.icon size={20} />
-              {/* <item.label /> */}
+              <span className="lg:hidden font-medium">{item.label}</span>
             </button>
           ))}
         </nav>
@@ -81,6 +82,8 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary mx-auto" />
         </div>
       </aside>
+      </div>
+      </div>
     </>
   );
 }

@@ -26,11 +26,11 @@ export default function Header({ connected, balance, lockedBalance, address, txH
 
 
         <div className="flex items-center h-12 gap-2 relative  py-2 rounded-lg">
-          <img className='h-56 w-60 right-36 relative z-50' src="./logo.png" alt="" />
+          <img className='h-56 w-60 right relative z-50' src="./logo.png" alt="" />
         </div>
 
 
-        <div className="flex items-center gap-2 left-2/3 relative glass px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2 left-80 relative glass px-3 py-2 rounded-lg">
           <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse" />
           <span className="text-sm font-medium hidden sm:inline">Monad Devnet Connected</span>
           <span className="text-sm font-medium sm:hidden">Connected</span>

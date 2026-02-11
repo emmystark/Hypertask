@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'HyperTask - AI Agent Marketplace on Monad',
   description: 'Decentralized AI-agent marketplace where Manager Agents hire specialized Worker Agents to complete tasks with instant on-chain payments.',
   icons: {
-    icon: '/favicon.ico',
+    icon: 'favicon.ico',
   },
 }
 

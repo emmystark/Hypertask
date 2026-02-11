@@ -60,20 +60,22 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         {/* Navigation */}
         <nav className="p-4 space-y-2">
           {navItems.map((item, index) => (
-            <button
-              key={index}
-              className={`
-                w-full flex items-center gap-3 lg:justify-center
-                p-3 rounded-lg transition-all duration-300
-                ${item.active 
-                  ? 'bg-primary text-white shadow-lg shadow-primary/50' 
-                  : 'text-gray-400 hover:bg-dark-700 hover:text-white'
-                }
+            <div>
+              <button
+            key={index}
+            className={`
+              w-full flex items-center gap-3 lg:justify-center
+              p-3 rounded-lg transition-all duration-300
+              ${item.active 
+                ? 'bg-primary text-white shadow-lg shadow-primary/50' 
+                : 'text-gray-400 hover:bg-dark-700 hover:text-white'
+              }
               `}
-            >
+              >
               <item.icon size={20} />
-              <span className="lg:hidden font-medium">{item.label}</span>
             </button>
+              <span className=" lg:text-xs whitespace-nowrap text-center font-bold">{item.label}</span>
+            </div>
           ))}
         </nav>
 

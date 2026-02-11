@@ -4,6 +4,8 @@ import React from 'react';
 import { MessageCircle, CheckCircle2 } from 'lucide-react';
 import { Task, Deliverable } from '@/types';
 
+import './styles/exec.css'; 
+
 interface TaskExecutionProps {
   userPrompt: string;
   tasks: Task[];

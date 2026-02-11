@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Wallet, ChevronDown } from 'lucide-react';
+import './styles/header.css'; 
 
 interface HeaderProps {
   connected: boolean;
@@ -26,15 +27,17 @@ export default function Header({ connected, balance, lockedBalance, address, txH
 
 
         <div className="flex items-center h-12 gap-2 relative  py-2 rounded-lg">
-          <img className='h-56 w-60 right relative z-50' src="./logo.png" alt="" />
+          <a href=".">
+            <img className='h-56 w-60 right relative z-50' src="./logo.png" alt="" />
+          </a>
         </div>
 
 
-        <div className="flex items-center gap-2 left-80 relative glass px-3 py-2 rounded-lg">
+        {/* <div className=" gcard  flex items-center gap-2 left-[25%] relative glass px-3 py-2 rounded-lg">
           <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse" />
           <span className="text-sm font-medium hidden sm:inline">Monad Devnet Connected</span>
           <span className="text-sm font-medium sm:hidden">Connected</span>
-        </div>
+        </div> */}
 
         {/* Wallet Info */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -73,9 +76,9 @@ export default function Header({ connected, balance, lockedBalance, address, txH
               )}
 
               {/* Dropdown */}
-              <button className="glass p-2 rounded-lg hover:bg-primary/20 transition-colors">
+              {/* <button className="glass p-2 rounded-lg hover:bg-primary/20 transition-colors">
                 <ChevronDown size={16} />
-              </button>
+              </button> */}
             </div>
           ) : (
             <button className="btn-primary text-sm sm:text-base">

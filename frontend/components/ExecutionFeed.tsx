@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Task } from '@/types';
-import { CheckCircle2, Circle, Lock } from 'lucide-react';
+import { CheckCircle2, Circle, Lock, Zap } from 'lucide-react';
 
 interface ExecutionFeedProps {
   tasks: Task[];
@@ -39,15 +39,20 @@ export default function ExecutionFeed({ tasks, escrowAmount }: ExecutionFeedProp
       {/* Task List */}
       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
         {tasks.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Circle size={32} className="mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No tasks yet</p>
+          <div className="text-center py-12 text-gray-400 relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border-2 border-primary/30 animate-pulse" />
+            <div className="relative z-10">
+              <Zap size={32} className="mx-auto mb-3 text-primary opacity-60" />
+              <p className="font-medium text-sm mb-1">System Online</p>
+              <p className="text-xs text-gray-500">Manager Agent ready 🤖</p>
+              <p className="text-xs text-gray-600 mt-2">Waiting for task...</p>
+            </div>
           </div>
         ) : (
           tasks.map((task, index) => (
             <div
               key={task.id}
-              className="glass rounded-xl p-4 space-y-2 fade-in"
+              className={`glass rounded-xl p-4 space-y-2 fade-in ${task.status === 'in-progress' ? 'border-l-4 border-primary glow-pulse' : 'border-l-4 border-accent-green'}`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-start gap-3">

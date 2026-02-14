@@ -73,7 +73,7 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
 
         {/* Input Form */}
         <form onSubmit={handleSubmit} className="relative">
-          <div className="glass rounded-2xl border-2 border-primary/30 focus-within:border-primary focus-within:glow-primary transition-all duration-300">
+          <div className="glass rounded-2xl border-2 border-primary/30 focus-within:border-primary focus-within:input-pulse transition-all duration-300">
             <input
               type="text"
               value={prompt}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import WelcomeScreen from '@/components/WelcomeScreen';
+import ConnectWalletPrompt from '@/components/ConnectWalletPrompt';
 import AgentStatus from '@/components/AgentStatus';
 import ExecutionFeed from '@/components/ExecutionFeed';
 import TaskExecution from '@/components/TaskExecution';
@@ -18,8 +19,8 @@ export default function Home() {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [walletConnected] = useState(true);
-  const [balance] = useState(100.00); // Mock balance
+  const [walletConnected, setWalletConnected] = useState(false); // Start as false
+  const [balance, setBalance] = useState(500.00); // Give 500 on claim
   const [lockedBalance, setLockedBalance] = useState(0);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(false);
@@ -335,32 +336,44 @@ export default function Home() {
     alert('Payment refunded - project cancelled');
   };
 
+  const handleConnect = () => {
+    logger.info('HomePage', 'Wallet connected');
+    setWalletConnected(true);
+    setBalance(500.00); // Give initial test tokens
+  };
+
+  const handleClaimHyper = () => {
+    logger.info('HomePage', 'Claiming test HYPER');
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setBalance(prev => prev + 500);
+        logger.success('HomePage', 'Claimed 500 test HYPER');
+        resolve();
+      }, 1000);
+    });
+  };
+
   return (
     <div className="min-h-screen flex animated-bg cyber-grid-bg">
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      {walletConnected && <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
       
       <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
         <Header
           connected={walletConnected}
           balance={balance}
           lockedBalance={lockedBalance}
-          address="XXX...YYYY"
+          address={walletConnected ? "XXX...YYYY" : undefined}
           txHash={currentProject?.transaction.txHash}
+          onClaimHyper={handleClaimHyper}
         />
 
         <main className="flex-1">
-          {!currentProject ? (
+          {!walletConnected ? (
+            <ConnectWalletPrompt onConnect={handleConnect} />
+          ) : !currentProject ? (
             <div>
               <WelcomeScreen onSubmit={startProject} />
               
-              {/* API Status Badge */}
-              <div className="fixed bottom-4 left-4 glass px-4 py-2 rounded-xl text-sm">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-accent-green' : 'bg-accent-orange'} animate-pulse`} />
-                  <span>{apiConnected ? 'API Connected' : 'Demo Mode'}</span>
-                </div>
-              </div>
-
               {error && (
                 <div className="fixed bottom-4 right-4 bg-accent-orange/20 border border-accent-orange/50 rounded-xl p-4 max-w-md">
                   <div className="flex items-center gap-2">

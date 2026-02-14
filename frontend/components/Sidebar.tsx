@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, History, Wallet, FileText, Menu, X, BookOpen } from 'lucide-react';
+import { Plus, History, Menu, X, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logger } from '@/utils/logger';
@@ -23,9 +23,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const navItems: NavItem[] = [
     { icon: Plus, label: 'New Task', href: '/' },
     { icon: History, label: 'History', href: '/history' },
-    { icon: Wallet, label: 'Wallet', href: '/wallet' },
-    { icon: BookOpen, label: 'Guide', href: '/usage-guide' },
-    { icon: FileText, label: 'Docs', href: '/docs' },
+    { icon: BookOpen, label: 'Docs', href: '/docs' },
   ];
 
   return (
@@ -93,7 +91,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     <item.icon size={20} />
                   </button>
                 </Link>
-                <span className=" lg:text-xs whitespace-nowrap text-center font-bold">{item.label}</span>
+                <span className=" lg:text-xs whitespace-nowrap center text-center font-bold">{item.label}</span>
               </div>
             );
           })}

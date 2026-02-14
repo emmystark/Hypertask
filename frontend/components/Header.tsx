@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Wallet, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, ChevronDown, Gift } from 'lucide-react';
 import './styles/header.css'; 
 
 interface HeaderProps {
@@ -10,12 +10,26 @@ interface HeaderProps {
   lockedBalance: number;
   address?: string;
   txHash?: string;
+  onClaimHyper?: () => void;
 }
 
-export default function Header({ connected, balance, lockedBalance, address, txHash }: HeaderProps) {
+export default function Header({ connected, balance, lockedBalance, address, txHash, onClaimHyper }: HeaderProps) {
+  const [claiming, setClaiming] = useState(false);
+
   const formatAddress = (addr: string) => {
     if (!addr) return '';
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  const handleClaim = async () => {
+    setClaiming(true);
+    try {
+      if (onClaimHyper) {
+        await onClaimHyper();
+      }
+    } finally {
+      setClaiming(false);
+    }
   };
 
   return (
@@ -50,6 +64,23 @@ export default function Header({ connected, balance, lockedBalance, address, txH
 
           {connected ? (
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* Claim Button */}
+              <button
+                onClick={handleClaim}
+                disabled={claiming}
+                className="glass px-4 py-2 rounded-lg bg-gradient-to-r from-accent-green to-accent-green/70 text-white hover:shadow-lg hover:shadow-accent-green/50 disabled:opacity-50 transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <Gift size={16} className="animate-bounce" />
+                  <span className="text-sm font-semibold hidden sm:inline">
+                    {claiming ? 'Claiming...' : 'Claim Test HYPER'}
+                  </span>
+                  <span className="text-sm font-semibold sm:hidden">
+                    {claiming ? '...' : 'Claim'}
+                  </span>
+                </div>
+              </button>
+
               {/* Balance */}
               <div className="glass px-3 py-2 rounded-lg">
                 <div className="flex items-center gap-2">

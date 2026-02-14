@@ -1,19 +1,31 @@
 'use client';
 
 import React from 'react';
-import { Plus, History, Wallet, FileText, Menu, X } from 'lucide-react';
+import { Plus, History, Wallet, FileText, Menu, X, BookOpen } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { logger } from '@/utils/logger';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
 }
 
+interface NavItem {
+  icon: any;
+  label: string;
+  href: string;
+}
+
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
-  const navItems = [
-    { icon: Plus, label: 'New Task', active: true },
-    { icon: History, label: 'History', active: false },
-    { icon: Wallet, label: 'Wallet', active: false },
-    { icon: FileText, label: 'Docs', active: false },
+  const pathname = usePathname();
+
+  const navItems: NavItem[] = [
+    { icon: Plus, label: 'New Task', href: '/' },
+    { icon: History, label: 'History', href: '/history' },
+    { icon: Wallet, label: 'Wallet', href: '/wallet' },
+    { icon: BookOpen, label: 'Guide', href: '/usage-guide' },
+    { icon: FileText, label: 'Docs', href: '/docs' },
   ];
 
   return (
@@ -59,24 +71,32 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="p-4 space-y-2">
-          {navItems.map((item, index) => (
-            <div>
-              <button
-            key={index}
-            className={`
-              w-full flex items-center gap-3 lg:justify-center
-              p-3 rounded-lg transition-all duration-300
-              ${item.active 
-                ? 'bg-primary text-white shadow-lg shadow-primary/50' 
-                : 'text-gray-400 hover:bg-dark-700 hover:text-white'
-              }
-              `}
-              >
-              <item.icon size={20} />
-            </button>
-              <span className=" lg:text-xs whitespace-nowrap text-center font-bold">{item.label}</span>
-            </div>
-          ))}
+          {navItems.map((item, index) => {
+            const isActive = pathname === item.href || (item.href === '/' && pathname === '/');
+            return (
+              <div key={index}>
+                <Link href={item.href}>
+                  <button
+                    onClick={() => {
+                      logger.info('Navigation', 'Navigated to page', { page: item.label, href: item.href });
+                      onToggle(); // Close sidebar on mobile
+                    }}
+                    className={`
+                      w-full flex items-center gap-3 lg:justify-center
+                      p-3 rounded-lg transition-all duration-300
+                      ${isActive 
+                        ? 'bg-primary text-white shadow-lg shadow-primary/50' 
+                        : 'text-gray-400 hover:bg-dark-700 hover:text-white'
+                      }
+                      `}
+                  >
+                    <item.icon size={20} />
+                  </button>
+                </Link>
+                <span className=" lg:text-xs whitespace-nowrap text-center font-bold">{item.label}</span>
+              </div>
+            );
+          })}
         </nav>
 
         {/* Bottom section - visible on desktop only */}

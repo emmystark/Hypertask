@@ -37,7 +37,7 @@ export default function TaskExecution({ userPrompt, tasks, deliverables, onAppro
         <div className="glass rounded-2xl p-6">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-xl">🧠</span>
+              <span className="text-xl">◆</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold mb-2">Manager Agent:</div>
@@ -54,7 +54,7 @@ export default function TaskExecution({ userPrompt, tasks, deliverables, onAppro
         <div className="glass rounded-xl p-4 bg-primary/10 border border-primary/30">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-xl">⚡</span>
+              <span className="text-l">■</span>
             </div>
             <div className="flex-1">
               <div className="font-semibold flex items-center gap-2">

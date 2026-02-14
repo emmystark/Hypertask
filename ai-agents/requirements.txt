@@ -1,0 +1,21 @@
+# HyperTask API - Production Dependencies
+# Using HuggingFace Inference API (no local models needed)
+
+# API Framework
+fastapi==0.109.0
+uvicorn==0.27.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# HTTP Client (async)
+httpx==0.26.0
+requests==2.31.0
+
+# Image Handling
+Pillow
+
+# Configuration
+python-dotenv==1.0.0
+
+# Logging
+loguru==0.7.2

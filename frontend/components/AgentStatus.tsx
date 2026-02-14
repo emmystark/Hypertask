@@ -20,7 +20,7 @@ export default function AgentStatus({ agents, escrowLocked, jobsCompleted }: Age
   return (
     <div className="glass rounded-2xl p-4 lg:p-6 space-y-6">
       <h3 className="text-xl font-bold flex items-center gap-2">
-        <span className="text-2xl">⚡</span>
+        <span className="text-2xl">■</span>
         Agent Status
       </h3>
 
@@ -63,7 +63,7 @@ export default function AgentStatus({ agents, escrowLocked, jobsCompleted }: Age
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-400">Escrow Locked:</span>
           <span className="font-bold flex items-center gap-1">
-            <span className="text-accent-orange">🔒</span>
+            <span className="text-accent-orange">■</span>
             {escrowLocked}
           </span>
         </div>
@@ -77,7 +77,7 @@ export default function AgentStatus({ agents, escrowLocked, jobsCompleted }: Age
       <div className="glass rounded-xl p-4 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xl">
-            ⚡
+            ■
           </div>
           <div className="flex-1">
             <div className="font-bold">HYPER</div>

@@ -32,7 +32,7 @@ export default function ExecutionFeed({ tasks, escrowAmount }: ExecutionFeedProp
   return (
     <div className="glass rounded-2xl p-4 lg:p-6 space-y-4">
       <h3 className="text-xl font-bold flex items-center gap-2">
-        <span className="text-2xl">📡</span>
+        <span className="text-2xl">►</span>
         Execution Feed
       </h3>
 

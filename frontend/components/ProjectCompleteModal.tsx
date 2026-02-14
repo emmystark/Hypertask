@@ -56,7 +56,7 @@ export default function ProjectCompleteModal({
           <div className="flex justify-center">
             <div className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full border border-primary/30">
               <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
-                <span className="text-sm">⚡</span>
+                <span className="text-sm">✓</span>
               </div>
               <span className="text-sm font-medium">Verified Monad Transaction</span>
             </div>

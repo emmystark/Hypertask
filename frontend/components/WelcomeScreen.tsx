@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Send, Sparkles, Zap } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface WelcomeScreenProps {
   onSubmit: (prompt: string) => void;
@@ -19,8 +20,14 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (prompt.trim()) {
+      logger.info('WelcomeScreen', 'Prompt submitted', { prompt });
       onSubmit(prompt);
     }
+  };
+
+  const handleExampleClick = (example: string) => {
+    logger.debug('WelcomeScreen', 'Example prompt selected', { example });
+    setPrompt(example);
   };
 
   return (
@@ -50,7 +57,7 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
             {examplePrompts.map((example, index) => (
               <button
                 key={index}
-                onClick={() => setPrompt(example)}
+                onClick={() => handleExampleClick(example)}
                 className="glass p-4 rounded-xl text-left hover:border-primary/50 hover:bg-primary/10 transition-all duration-300 group"
               >
                 <div className="flex items-start gap-3">

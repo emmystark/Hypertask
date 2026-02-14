@@ -10,9 +10,8 @@ import TaskExecution from '@/components/TaskExecution';
 import ReviewDeliverablesModal from '@/components/ReviewDeliverablesModal';
 import ProjectCompleteModal from '@/components/ProjectCompleteModal';
 import { Agent, Task, Deliverable, Transaction, Project } from '@/types';
-
-// JavaJoy logo as base64 data URL (placeholder - in production this would be generated)
-const JAVAJOY_LOGO = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzJEMUIxMiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE4MCIgcj0iODAiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9IjAuOSIvPjxlbGxpcHNlIGN4PSIyMDAiIGN5PSIyMDAiIHJ4PSI5MCIgcnk9IjQwIiBmaWxsPSIjRkZGRkZGIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNMTYwIDE0MCBRMTYwIDEyMCAxNzUgMTEwIFQyMDAgMTAwIFEyMTUgMTAwIDIyNSAxMTAgVDI0MCAxNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHBhdGggZD0iTTE3MCAxNjAgUTE3MCAxODAgMTg1IDE5NSBUMjE1IDE5NSBRMjI1IDE5NSAyMzUgMTg1IFQyNDAgMTYwIiBmaWxsPSJub25lIiBzdHJva2U9IiM4QjVDRjYiIHN0cm9rZS13aWR0aD0iNCIvPjx0ZXh0IHg9IjIwMCIgeT0iMjgwIiBmb250LWZhbWlseT0iU3BhY2UgR3JvdGVzaywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI0OCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SmF2YUpveTwvdGV4dD48L3N2Zz4=';
+import { hypertaskAPI, type ExecutionResult } from '@/services/api';
+import { logger } from '@/utils/logger';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,24 +19,83 @@ export default function Home() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [walletConnected] = useState(true);
-  const [balance] = useState(0.00);
+  const [balance] = useState(100.00); // Mock balance
   const [lockedBalance, setLockedBalance] = useState(0);
-
-  // Mock agents data
-  const [agents] = useState<Agent[]>([
-    { id: '1', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
-    { id: '2', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Copywriting' },
-  ]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [apiConnected, setApiConnected] = useState(false);
 
   const [jobsCompleted] = useState(0);
 
-  // Simulate project execution
-  const startProject = (prompt: string) => {
+  // Check API connection on mount
+  useEffect(() => {
+    logger.info('HomePage', 'Initializing dashboard');
+    checkApiConnection();
+    fetchAgents();
+  }, []);
+
+  const checkApiConnection = async () => {
+    logger.info('HomePage', 'Checking API connection');
+    try {
+      const isHealthy = await hypertaskAPI.checkHealth();
+      setApiConnected(isHealthy);
+      if (isHealthy) {
+        logger.success('HomePage', 'Connected to HyperTask API');
+      } else {
+        logger.warn('HomePage', 'API not available, using demo mode');
+      }
+    } catch (err) {
+      setApiConnected(false);
+      logger.error('HomePage', 'API health check failed', err);
+    }
+  };
+
+  const fetchAgents = async () => {
+    logger.info('HomePage', 'Fetching agents list');
+    try {
+      const agentsList = await hypertaskAPI.getAgents();
+      if (agentsList && agentsList.length > 0) {
+        logger.success('HomePage', 'Agents loaded', { count: agentsList.length });
+        setAgents(agentsList.map((agent: any) => ({
+          id: agent.name.toLowerCase(),
+          name: agent.name,
+          icon: agent.name === 'DesignBot' ? '🎨' : '📝',
+          cost: agent.cost,
+          status: 'idle' as const,
+          specialty: agent.specialty
+        })));
+      } else {
+        logger.warn('HomePage', 'No agents from API, using defaults');
+        // Use default agents as fallback
+        setAgents([
+          { id: '1', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
+          { id: '2', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Copywriting' },
+        ]);
+      }
+    } catch (err) {
+      logger.error('HomePage', 'Failed to fetch agents', err);
+      // Use default agents
+      setAgents([
+        { id: '1', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
+        { id: '2', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Copywriting' },
+      ]);
+    }
+  };
+
+  const startProject = async (prompt: string) => {
+    logger.info('HomePage', 'Starting new project', { prompt });
+    setLoading(true);
+    setError(null);
+
+    // Create initial project
     const newProject: Project = {
       id: Date.now().toString(),
       userPrompt: prompt,
       status: 'analyzing',
-      tasks: [],
+      tasks: [
+        { id: '1', title: 'Analyzing request...', description: '', assignedTo: 'MANAGER', status: 'in-progress' }
+      ],
       deliverables: [],
       transaction: {
         id: 'tx-' + Date.now(),
@@ -55,70 +113,161 @@ export default function Home() {
     setCurrentProject(newProject);
     setLockedBalance(70);
 
-    // Simulate task progression
-    setTimeout(() => {
-      setCurrentProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          status: 'in-progress',
-          tasks: [
-            { id: '1', title: 'Escrow contract locked 70 HYPER.', description: '', assignedTo: 'ESCROW', status: 'completed' },
-            { id: '2', title: 'Dispatching Task to DesignBot...', description: '', assignedTo: 'MANAGER', status: 'completed' },
-            { id: '3', title: 'DesignBot accepted Task.', description: '', assignedTo: 'DesignBot', status: 'completed' },
-          ]
-        };
+    try {
+      logger.info('HomePage', 'Calling API execute endpoint', { projectId: newProject.id });
+      
+      // Call API using the service
+      const result = await hypertaskAPI.executeProject({
+        prompt: prompt,
+        context: {
+          brand_voice: 'professional and friendly',
+          design_style: 'modern minimalist',
+          colors: ['purple', 'cyan']
+        }
       });
+      
+      logger.success('HomePage', 'API execution successful', { deliverables: result.deliverables.length });
+      
+      // Update with real results
+      updateProjectWithResults(result, newProject);
+      
+    } catch (err) {
+      logger.error('HomePage', 'API execution failed', err);
+      setError('API connection failed - using demo mode');
+      // Fall back to demo
+      simulateDemoProject(newProject);
+    }
+  };
+
+  const updateProjectWithResults = (result: ExecutionResult, project: Project) => {
+    // Simulate progress with real data
+    setTimeout(() => {
+      setCurrentProject(prev => prev ? {
+        ...prev,
+        tasks: [
+          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
+          { id: '2', title: 'Manager analyzed request', description: '', assignedTo: 'MANAGER', status: 'completed' },
+          { id: '3', title: 'Dispatching to agents...', description: '', assignedTo: 'MANAGER', status: 'in-progress', progress: 30 },
+        ]
+      } : prev);
     }, 1000);
 
-    // Add design deliverable
+    // Progress update
     setTimeout(() => {
-      setCurrentProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          tasks: [
-            ...prev.tasks,
-            { id: '4', title: 'DesignBot completed Task and delivered the logo.', description: '', assignedTo: 'DesignBot', status: 'completed' },
-          ],
-          deliverables: [
-            { id: 'design', type: 'image', name: 'JavaJoy Logo.png', content: JAVAJOY_LOGO, downloadUrl: '#' }
-          ]
-        };
+      setCurrentProject(prev => prev ? {
+        ...prev,
+        tasks: [
+          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
+          { id: '2', title: 'Manager analyzed request', description: '', assignedTo: 'MANAGER', status: 'completed' },
+          { id: '3', title: 'DesignBot creating logo...', description: '', assignedTo: 'DesignBot', status: 'in-progress', progress: 60 },
+        ]
+      } : prev);
+    }, 2000);
+
+    // Final results update
+    setTimeout(() => {
+      const deliverables: Deliverable[] = result.deliverables.map((d: any) => ({
+        id: d.id,
+        type: d.type,
+        name: d.name,
+        content: d.content,
+        downloadUrl: d.type === 'image' ? '#' : undefined
+      }));
+
+      const tasks: Task[] = [];
+      
+      // Build tasks based on deliverables
+      result.deliverables.forEach((d: any) => {
+        if (d.type === 'image') {
+          tasks.push({
+            id: d.id,
+            title: 'DesignBot completed logo',
+            description: '',
+            assignedTo: 'DesignBot',
+            status: 'completed'
+          });
+        } else if (d.type === 'text') {
+          tasks.push({
+            id: d.id,
+            title: 'CopyBot generated slogan',
+            description: '',
+            assignedTo: 'CopyBot',
+            status: 'completed'
+          });
+        }
       });
+
+      setCurrentProject(prev => prev ? {
+        ...prev,
+        status: 'review',
+        tasks: [
+          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
+          { id: '2', title: 'Manager analyzed request', description: '', assignedTo: 'MANAGER', status: 'completed' },
+          ...tasks,
+        ],
+        deliverables,
+        transaction: {
+          ...prev.transaction,
+          total: result.transaction.total,
+          breakdown: result.transaction.breakdown,
+          burnFee: result.transaction.burn_fee
+        }
+      } : prev);
+      
+      setLoading(false);
+    }, 3500);
+  };
+
+  const simulateDemoProject = (project: Project) => {
+    setTimeout(() => {
+      setCurrentProject(prev => prev ? {
+        ...prev,
+        tasks: [
+          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
+          { id: '2', title: 'Manager Agent analyzing...', description: '', assignedTo: 'MANAGER', status: 'completed' },
+        ]
+      } : prev);
+    }, 1000);
+
+    setTimeout(() => {
+      setCurrentProject(prev => prev ? {
+        ...prev,
+        tasks: [
+          ...prev.tasks,
+          { id: '3', title: 'DesignBot accepted task', description: '', assignedTo: 'DesignBot', status: 'completed' },
+        ],
+        deliverables: [
+          {
+            id: 'design',
+            type: 'image',
+            name: 'Logo.png',
+            content: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzhCNUNGNiIvPjx0ZXh0IHg9IjIwMCIgeT0iMjIwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Mb2dvPC90ZXh0Pjwvc3ZnPg==',
+            downloadUrl: '#'
+          }
+        ]
+      } : prev);
     }, 2500);
 
-    // Add copy task
     setTimeout(() => {
-      setCurrentProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          tasks: [
-            ...prev.tasks,
-            { id: '5', title: 'CopyBot is generating copy...', description: '', assignedTo: 'CopyBot', status: 'in-progress', progress: 58 },
-          ]
-        };
-      });
-    }, 3500);
-
-    // Complete copy
-    setTimeout(() => {
-      setCurrentProject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          status: 'review',
-          tasks: prev.tasks.map(t => 
-            t.id === '5' ? { ...t, status: 'completed', progress: 100, title: 'CopyBot completed Task and delivered the slogan.' } : t
-          ),
-          deliverables: [
-            ...prev.deliverables,
-            { id: 'copy', type: 'text', name: 'Slogan', content: 'JavaJoy: Wake up to happiness.' }
-          ]
-        };
-      });
-    }, 5000);
+      setCurrentProject(prev => prev ? {
+        ...prev,
+        status: 'review',
+        tasks: [
+          ...prev.tasks,
+          { id: '4', title: 'CopyBot generated slogan', description: '', assignedTo: 'CopyBot', status: 'completed' },
+        ],
+        deliverables: [
+          ...prev.deliverables,
+          {
+            id: 'copy',
+            type: 'text',
+            name: 'Slogan',
+            content: 'Excellence in Every Detail'
+          }
+        ]
+      } : prev);
+      setLoading(false);
+    }, 4000);
   };
 
   const handleApproveFromExecution = () => {
@@ -126,6 +275,10 @@ export default function Home() {
   };
 
   const handleApprove = () => {
+    if (!currentProject) return;
+    
+    logger.info('HomePage', 'Project approved', { projectId: currentProject.id });
+    
     setShowReviewModal(false);
     setCurrentProject(prev => {
       if (!prev) return prev;
@@ -136,6 +289,27 @@ export default function Home() {
       };
     });
     setLockedBalance(0);
+    
+    // Save to history
+    try {
+      const existing = localStorage.getItem('hypertask_history');
+      const history = existing ? JSON.parse(existing) : [];
+      
+      history.push({
+        id: currentProject.id,
+        prompt: currentProject.userPrompt,
+        status: 'completed',
+        timestamp: new Date().toLocaleString(),
+        cost: currentProject.transaction.total,
+        deliverables: currentProject.deliverables.map(d => ({ type: d.type, name: d.name }))
+      });
+      
+      localStorage.setItem('hypertask_history', JSON.stringify(history));
+      logger.success('HomePage', 'Project saved to history');
+    } catch (error) {
+      logger.error('HomePage', 'Failed to save to history', error);
+    }
+    
     setTimeout(() => {
       setShowCompleteModal(true);
     }, 500);
@@ -144,14 +318,17 @@ export default function Home() {
   const handleStartNew = () => {
     setShowCompleteModal(false);
     setCurrentProject(null);
+    setError(null);
   };
 
   const handleRevision = () => {
+    logger.info('HomePage', 'Revision requested', { projectId: currentProject?.id });
     setShowReviewModal(false);
-    alert('Revision requested - agents will rework the deliverables');
+    alert('Revision requested - agents will rework deliverables');
   };
 
   const handleReject = () => {
+    logger.info('HomePage', 'Project rejected', { projectId: currentProject?.id });
     setShowReviewModal(false);
     setCurrentProject(null);
     setLockedBalance(0);
@@ -160,6 +337,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex animated-bg cyber-grid-bg">
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
         <Header
@@ -172,22 +350,46 @@ export default function Home() {
 
         <main className="flex-1">
           {!currentProject ? (
-            <WelcomeScreen onSubmit={startProject} />
+            <div>
+              <WelcomeScreen onSubmit={startProject} />
+              
+              {/* API Status Badge */}
+              <div className="fixed bottom-4 left-4 glass px-4 py-2 rounded-xl text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-accent-green' : 'bg-accent-orange'} animate-pulse`} />
+                  <span>{apiConnected ? 'API Connected' : 'Demo Mode'}</span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="fixed bottom-4 right-4 bg-accent-orange/20 border border-accent-orange/50 rounded-xl p-4 max-w-md">
+                  <div className="flex items-center gap-2">
+                    <span className="text-accent-orange">⚠️</span>
+                    <span className="text-sm">{error}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="p-4 lg:p-6">
               <div className="max-w-7xl mx-auto">
+                {loading && (
+                  <div className="mb-4 glass rounded-xl p-4 text-center">
+                    <div className="spinner w-6 h-6 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">AI agents working...</p>
+                  </div>
+                )}
+                
                 <div className="grid lg:grid-cols-3 gap-6">
-                  {/* Main Content */}
                   <div className="lg:col-span-2">
                     <TaskExecution
                       userPrompt={currentProject.userPrompt}
                       tasks={currentProject.tasks}
                       deliverables={currentProject.deliverables}
                       onApprove={handleApproveFromExecution}
-                      />
+                    />
                   </div>
 
-                  {/* Sidebar Panels */}
                   <div className="space-y-6">
                     <ExecutionFeed
                       tasks={currentProject.tasks}
@@ -204,10 +406,8 @@ export default function Home() {
             </div>
           )}
         </main>
-      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
-      {/* Modals */}
       {currentProject && (
         <>
           <ReviewDeliverablesModal

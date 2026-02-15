@@ -6,10 +6,10 @@ import ChatInterface from './ChatInterface';
 
 interface WelcomeScreenProps {
   onSubmit: (prompt: string) => void;
-  apiUrl: string;
+  // apiUrl: string;
 }
 
-export default function WelcomeScreen({ onSubmit, apiUrl }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
   const [prompt, setPrompt] = useState('');
   const [showChat, setShowChat] = useState(false);
 
@@ -53,7 +53,7 @@ export default function WelcomeScreen({ onSubmit, apiUrl }: WelcomeScreenProps) 
           </div>
 
           {/* Chat Interface */}
-          <ChatInterface onTaskReady={handleTaskReady} apiUrl={apiUrl} />
+          <ChatInterface onTaskReady={handleTaskReady} />
         </div>
       </div>
     );

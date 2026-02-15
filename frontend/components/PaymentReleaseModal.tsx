@@ -215,7 +215,7 @@ export default function PaymentReleaseModal({
                     <span className="text-gray-400 flex-1">Burn Fee (5%):</span>
                     <span className="font-medium flex items-center gap-1">
                       {transaction.burnFee.toFixed(1)} HYPER
-                      <span className="text-accent-orange">🔥</span>
+                      <span className="text-accent-orange"></span>
                     </span>
                   </div>
                 </div>

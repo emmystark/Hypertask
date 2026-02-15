@@ -250,7 +250,7 @@ export default function Home() {
               {!apiConnected && (
                 <div className="mb-4 glass rounded-xl p-4 border border-accent-orange/50 bg-accent-orange/10">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">⚠️</span>
+                    <span className="text-2xl"></span>
                     <div className="flex-1">
                       <h3 className="font-semibold text-accent-orange mb-1">Backend Not Connected</h3>
                       <p className="text-sm text-gray-400">

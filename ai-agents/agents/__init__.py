@@ -1,5 +1,5 @@
 """
-Agent System Package
+Agents Package
 """
 from agents.copybot import copybot
 from agents.designbot import designbot

@@ -25,7 +25,7 @@ export default function ConnectWalletPrompt({ onConnect }: ConnectWalletPromptPr
           </h1>
           
           <p className="text-lg sm:text-xl text-gray-400 max-w-lg mx-auto">
-            To get started with AI agent collaboration and earn rewards, connect your wallet first.
+            To get started with AI agent collaboration, connect your wallet first.
           </p>
         </div>
 

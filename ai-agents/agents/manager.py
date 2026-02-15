@@ -26,11 +26,12 @@ class ManagerAgent:
         
         # Determine what's needed
         needs_design = any(word in prompt_lower for word in [
-            'logo', 'design', 'visual', 'graphic', 'image', 'icon', 'brand', 'create a visual', 'draw', 'sketch'
+            'logo', 'design', 'visual', 'graphic', 'image', 'icon', 'brand'
         ])
         
         needs_copy = any(word in prompt_lower for word in [
-            'slogan', 'copy', 'text', 'tagline', 'campaign', 'write', 'content', 'copywriting'
+            'slogan', 'copy', 'text', 'tagline', 'campaign', 'write', 'content',
+            'landing page', 'pitch deck', 'email', 'social'
         ])
         
         # Extract brand name
@@ -40,7 +41,6 @@ class ManagerAgent:
         tasks = []
         total_cost = 0
         
-        # IMPORTANT: Only add design task if explicitly requested
         if needs_design:
             tasks.append({
                 "agent": "designbot",
@@ -50,20 +50,42 @@ class ManagerAgent:
             })
             total_cost += designbot.cost
         
-        # IMPORTANT: Only add copy task if explicitly requested or if nothing is clear
         if needs_copy:
-            tasks.append({
-                "agent": "copybot",
-                "task_type": "slogan_generation",
-                "cost": copybot.cost,
-                "description": f"Generate slogan for {brand_name}"
-            })
-            total_cost += copybot.cost
+            # Determine specific copy type
+            if 'landing page' in prompt_lower:
+                tasks.append({
+                    "agent": "copybot",
+                    "task_type": "landing_page",
+                    "cost": 25,
+                    "description": f"Generate landing page copy for {brand_name}"
+                })
+                total_cost += 25
+            elif 'pitch deck' in prompt_lower:
+                tasks.append({
+                    "agent": "copybot",
+                    "task_type": "pitch_deck",
+                    "cost": 30,
+                    "description": f"Create pitch deck outline for {brand_name}"
+                })
+                total_cost += 30
+            else:
+                tasks.append({
+                    "agent": "copybot",
+                    "task_type": "slogan_generation",
+                    "cost": copybot.cost,
+                    "description": f"Generate slogan for {brand_name}"
+                })
+                total_cost += copybot.cost
         
-        # Default to slogan ONLY if unclear (no image generation by default!)
+        # Default to both if unclear
         if not needs_design and not needs_copy:
-            logger.info("No clear design or copy request detected - defaulting to copy only")
             tasks = [
+                {
+                    "agent": "designbot",
+                    "task_type": "logo_generation",
+                    "cost": designbot.cost,
+                    "description": f"Create logo for {brand_name}"
+                },
                 {
                     "agent": "copybot",
                     "task_type": "slogan_generation",
@@ -71,7 +93,7 @@ class ManagerAgent:
                     "description": f"Generate slogan for {brand_name}"
                 }
             ]
-            total_cost = copybot.cost
+            total_cost = designbot.cost + copybot.cost
         
         burn_fee = round(total_cost * 0.05, 2)
         
@@ -81,9 +103,7 @@ class ManagerAgent:
             "tasks": tasks,
             "total_cost": total_cost,
             "burn_fee": burn_fee,
-            "estimated_time": len(tasks) * 30,
-            "has_design_task": needs_design,
-            "has_copy_task": needs_copy
+            "estimated_time": len(tasks) * 30
         }
     
     async def execute_tasks(
@@ -139,6 +159,41 @@ class ManagerAgent:
                         "agent": "CopyBot",
                         "metadata": {
                             "brand_name": brand_name
+                        }
+                    })
+                
+                elif task_type == "landing_page":
+                    page_copy = await copybot.generate_landing_page(
+                        brand_name=brand_name,
+                        product_description=ctx.get("product_description", "innovative solution"),
+                        context=ctx
+                    )
+                    
+                    deliverables.append({
+                        "id": "landing_page",
+                        "type": "content",
+                        "name": "Landing Page Copy",
+                        "content": page_copy,
+                        "agent": "CopyBot",
+                        "metadata": {
+                            "sections": list(page_copy.keys())
+                        }
+                    })
+                
+                elif task_type == "pitch_deck":
+                    deck = await copybot.generate_pitch_deck_copy(
+                        brand_name=brand_name,
+                        context=ctx
+                    )
+                    
+                    deliverables.append({
+                        "id": "pitch_deck",
+                        "type": "presentation",
+                        "name": "Pitch Deck",
+                        "content": deck,
+                        "agent": "CopyBot",
+                        "metadata": {
+                            "slides": len(deck)
                         }
                     })
                 
@@ -199,7 +254,6 @@ class ManagerAgent:
         if " for " in prompt_lower:
             parts = prompt_lower.split(" for ")
             if len(parts) > 1:
-                # Get next 1-2 words
                 words = parts[1].split()[:2]
                 name = " ".join(words)
                 return name.strip('"\'').title()

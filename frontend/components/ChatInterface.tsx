@@ -18,7 +18,7 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ onTaskReady, apiUrl }: ChatInterfaceProps) {
   // Use provided apiUrl or fallback to environment variable or localhost
-  const API_URL = apiUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const API_URL = apiUrl || process.env.NEXT_PUBLIC_API_URL || 'https://hypertask.onrender.com';
   
   const [messages, setMessages] = useState<Message[]>([
     {

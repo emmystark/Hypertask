@@ -52,7 +52,7 @@ export default function Home() {
     } catch (err) {
       setApiConnected(false);
       logger.error('HomePage', 'API health check failed', err);
-      setError('Cannot connect to backend. Make sure the API is running on http://localhost:8000');
+      setError('Cannot connect to backend. Make sure the API is running on https://hypertask.onrender.com');
     }
   };
 
@@ -100,7 +100,7 @@ export default function Home() {
     logger.info('HomePage', 'Executing tasks', { conversationId: convId });
 
     try {
-      const response = await fetch('http://localhost:8000/execute', {
+      const response = await fetch('https://hypertask.onrender.com/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_id: convId })
@@ -300,7 +300,7 @@ export default function Home() {
                   <div className="flex-1 overflow-hidden">
                     <ChatInterface 
                       onTaskReady={handleTaskReady}
-                      apiUrl="http://localhost:8000"
+                      apiUrl="https://hypertask.onrender.com"
                     />
                   </div>
                 </div>

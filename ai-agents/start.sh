@@ -23,7 +23,7 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-echo "✅ Prerequisites check passed"
+echo " Prerequisites check passed"
 echo ""
 
 # Backend Setup
@@ -45,10 +45,10 @@ pip install -q -r requirements.txt
 
 # Check for .env file
 if [ ! -f ".env" ]; then
-    echo "⚠️  No .env file found. Creating from template..."
+    echo "  No .env file found. Creating from template..."
     cp .env.example .env
     echo ""
-    echo "⚠️  IMPORTANT: Please edit .env and add your Hugging Face token:"
+    echo "  IMPORTANT: Please edit .env and add your Hugging Face token:"
     echo "   HF_TOKEN=your_token_here"
     echo ""
     echo "Get your token from: https://huggingface.co/settings/tokens"
@@ -62,7 +62,7 @@ if grep -q "your_huggingface_token_here" .env; then
     exit 1
 fi
 
-echo "✅ Backend setup complete"
+echo " Backend setup complete"
 echo ""
 
 # Frontend Setup
@@ -78,10 +78,10 @@ fi
 # Create .env.local if it doesn't exist
 if [ ! -f ".env.local" ]; then
     echo "Creating .env.local..."
-    echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+    echo "NEXT_PUBLIC_API_URL=https://hypertask.onrender.com" > .env.local
 fi
 
-echo "✅ Frontend setup complete"
+echo " Frontend setup complete"
 echo ""
 
 # Start services
@@ -116,8 +116,8 @@ if [ "$mode" = "1" ]; then
     echo ""
     echo "🌐 Starting frontend..."
     echo "   Frontend: http://localhost:3000"
-    echo "   Backend API: http://localhost:8000"
-    echo "   API Docs: http://localhost:8000/docs"
+    echo "   Backend API: https://hypertask.onrender.com"
+    echo "   API Docs: https://hypertask.onrender.com/docs"
     echo ""
     echo "Press Ctrl+C to stop all services"
     echo ""
@@ -130,8 +130,8 @@ if [ "$mode" = "1" ]; then
 elif [ "$mode" = "2" ]; then
     echo ""
     echo "Starting in Full Mode..."
-    echo "⚠️  This will download large AI models on first run!"
-    echo "⚠️  Requires significant RAM/VRAM"
+    echo "  This will download large AI models on first run!"
+    echo "  Requires significant RAM/VRAM"
     echo ""
     read -p "Continue? (y/n): " confirm
     
@@ -156,8 +156,8 @@ elif [ "$mode" = "2" ]; then
     echo ""
     echo "🌐 Starting frontend..."
     echo "   Frontend: http://localhost:3000"
-    echo "   Backend API: http://localhost:8000"
-    echo "   API Docs: http://localhost:8000/docs"
+    echo "   Backend API: https://hypertask.onrender.com"
+    echo "   API Docs: https://hypertask.onrender.com/docs"
     echo ""
     echo "Press Ctrl+C to stop all services"
     echo ""

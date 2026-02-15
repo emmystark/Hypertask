@@ -61,16 +61,16 @@ class ModelDebugger:
         else:
             env_tests["HF_TOKEN_VALID"] = False
             env_tests["HF_TOKEN"] = "NOT SET"
-            logger.warning("⚠️  HF_TOKEN not set! Set it in .env file")
+            logger.warning("  HF_TOKEN not set! Set it in .env file")
         
         # Display results
         logger.info("📋 Environment Status:")
         for key, value in env_tests.items():
             if key == "HF_TOKEN":
-                status = "✅" if env_tests.get("HF_TOKEN_VALID") else "❌"
+                status = "" if env_tests.get("HF_TOKEN_VALID") else "❌"
                 logger.info(f"  {status} {key}: {value}")
             else:
-                status = "✅" if value else "❌"
+                status = "" if value else "❌"
                 logger.info(f"  {status} {key}: {value}")
         
         self.results["configuration"]["environment"] = env_tests
@@ -78,14 +78,14 @@ class ModelDebugger:
     
     def get_agent_status(self) -> Dict[str, Any]:
         """Get status of all agents"""
-        logger.info("🤖 Checking Agent Status...")
+        logger.info(" Checking Agent Status...")
         
         agents_status = {
             "copybot": copybot.get_status(),
             "designbot": designbot.get_status()
         }
         
-        logger.info("📊 Agent Models:")
+        logger.info(" Agent Models:")
         logger.info(f"  CopyBot Model: {copybot.get_status()['model']}")
         logger.info(f"  CopyBot Fallback: {copybot.get_status()['fallback_model']}")
         logger.info(f"  DesignBot Model: {designbot.get_status()['model']}")
@@ -115,7 +115,7 @@ class ModelDebugger:
                     "slogan": slogan,
                     "model": copybot.model_name
                 }
-                logger.success(f"  ✅ Slogan: {slogan}")
+                logger.success(f"   Slogan: {slogan}")
             except Exception as e:
                 logger.error(f"  ❌ Error: {str(e)}")
                 results["tests"]["llama_3_1"] = {
@@ -124,7 +124,7 @@ class ModelDebugger:
                     "model": copybot.model_name
                 }
         else:
-            logger.warning("  ⚠️  HF_TOKEN not set, skipping API test")
+            logger.warning("    HF_TOKEN not set, skipping API test")
             results["tests"]["llama_3_1"] = {
                 "status": "skipped",
                 "reason": "HF_TOKEN not set"
@@ -138,7 +138,7 @@ class ModelDebugger:
                 "status": "success",
                 "slogan": fallback_slogan
             }
-            logger.success(f"  ✅ Fallback: {fallback_slogan}")
+            logger.success(f"   Fallback: {fallback_slogan}")
         except Exception as e:
             logger.error(f"  ❌ Fallback error: {str(e)}")
             results["tests"]["fallback_template"] = {
@@ -170,7 +170,7 @@ class ModelDebugger:
                 "size": placeholder.get("size"),
                 "is_placeholder": placeholder.get("is_placeholder", True)
             }
-            logger.success(f"  ✅ Placeholder generated: {placeholder['size']}")
+            logger.success(f"   Placeholder generated: {placeholder['size']}")
         except Exception as e:
             logger.error(f"  ❌ Placeholder error: {str(e)}")
             results["tests"]["placeholder"] = {
@@ -200,7 +200,7 @@ class ModelDebugger:
                     "error": str(e)
                 }
         else:
-            logger.warning("  ⚠️  HF_TOKEN not set, skipping API test")
+            logger.warning("    HF_TOKEN not set, skipping API test")
             results["tests"]["flux_2_api"] = {
                 "status": "skipped",
                 "reason": "HF_TOKEN not set"
@@ -211,7 +211,7 @@ class ModelDebugger:
     
     async def test_manager_analysis(self) -> Dict[str, Any]:
         """Test Manager's request analysis"""
-        logger.info("📊 Testing Manager Request Analysis...")
+        logger.info(" Testing Manager Request Analysis...")
         
         test_prompts = [
             "Create a logo for my coffee shop",
@@ -234,7 +234,7 @@ class ModelDebugger:
                     "total_cost": analysis["total_cost"],
                     "tasks_detail": [f"{t['agent']}: {t['task_type']}" for t in analysis["tasks"]]
                 }
-                logger.info(f"    ✅ Tasks: {results[prompt]['tasks_detail']}")
+                logger.info(f"     Tasks: {results[prompt]['tasks_detail']}")
                 logger.info(f"       Cost: ${results[prompt]['total_cost']}")
             except Exception as e:
                 logger.error(f"    ❌ Error: {str(e)}")
@@ -297,13 +297,13 @@ class ModelDebugger:
 📋 CONFIGURATION:
 """ + json.dumps(self.results.get("configuration", {}), indent=2) + """
 
-🤖 AGENT STATUS:
+ AGENT STATUS:
 """ + json.dumps(self.results.get("models", {}), indent=2) + """
 
 🧪 TEST RESULTS:
 """ + json.dumps(self.results.get("tests", {}), indent=2) + """
 
-✅ SUMMARY:
+ SUMMARY:
 
 Primary Models:
   • CopyBot (Text): {}
@@ -388,7 +388,7 @@ Status:
         report_file = os.path.join(os.path.dirname(__file__), "debug_report.json")
         with open(report_file, "w") as f:
             json.dump(self.results, f, indent=2)
-        logger.success(f"✅ Report saved to: {report_file}")
+        logger.success(f" Report saved to: {report_file}")
 
 def main():
     """Main entry point"""
@@ -432,7 +432,7 @@ Examples:
         else:
             asyncio.run(debugger.run_full_debug(test_api=args.test_api))
     except KeyboardInterrupt:
-        logger.warning("\n⚠️  Debug interrupted by user")
+        logger.warning("\n  Debug interrupted by user")
         sys.exit(0)
     except Exception as e:
         logger.error(f"Debug failed: {str(e)}")

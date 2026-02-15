@@ -80,7 +80,7 @@ export default function WalletPage() {
       case 'reward':
         return '🎁';
       default:
-        return '💰';
+        return '';
     }
   };
 

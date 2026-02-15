@@ -39,7 +39,7 @@ export default function UsageGuidePage() {
     },
     {
       id: 'manage-wallet',
-      title: '💰 Managing Your Wallet',
+      title: ' Managing Your Wallet',
       icon: '🏦',
       steps: [
         'Click on the "Wallet" tab in the sidebar',
@@ -82,7 +82,7 @@ export default function UsageGuidePage() {
     },
     {
       id: 'understand-agents',
-      title: '🤖 Understanding AI Agents',
+      title: ' Understanding AI Agents',
       icon: '👾',
       steps: [
         'DesignBot: Creates logos, graphics, and visual assets',
@@ -130,7 +130,7 @@ export default function UsageGuidePage() {
     },
     {
       id: 'review-approve',
-      title: '✅ Reviewing & Approving Work',
+      title: ' Reviewing & Approving Work',
       icon: '👓',
       steps: [
         'When a project completes, a review modal appears',

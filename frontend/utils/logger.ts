@@ -42,9 +42,9 @@ class Logger {
     const emoji = {
       debug: '🔍',
       info: 'ℹ️',
-      warn: '⚠️',
+      warn: '',
       error: '❌',
-      success: '✅'
+      success: ''
     };
     return `${emoji[level]} [${category}] ${message}`;
   }

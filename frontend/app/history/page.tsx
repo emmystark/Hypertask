@@ -134,7 +134,7 @@ export default function HistoryPage() {
                     </div>
                     <p className="text-white font-medium mb-2 break-words">{item.prompt}</p>
                     <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span>💰 ${item.cost.toFixed(2)}</span>
+                      <span> ${item.cost.toFixed(2)}</span>
                       <span>📦 {item.deliverables.length} deliverables</span>
                     </div>
                   </div>

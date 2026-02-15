@@ -146,14 +146,14 @@ export default function TaskExecution({ userPrompt, tasks, deliverables, onAppro
             )}
             
             {/* Action Buttons */}
-            <div className="flex gap-2 pt-2">
+            {/* <div className="flex gap-2 pt-2">
               <button className="flex-1 px-4 py-2 rounded-lg bg-dark-800 hover:bg-primary/20 transition-colors text-sm font-medium flex items-center justify-center gap-2 border border-gray-600 hover:border-primary hover:shadow-lg hover:shadow-primary/20">
                 <span>📋</span> Copy
               </button>
               <button className="flex-1 px-4 py-2 rounded-lg bg-dark-800 hover:bg-primary/20 transition-colors text-sm font-medium flex items-center justify-center gap-2 border border-gray-600 hover:border-primary hover:shadow-lg hover:shadow-primary/20">
                 <span>⬇️</span> Download
               </button>
-            </div>
+            </div> */}
           </div>
         );
       })}

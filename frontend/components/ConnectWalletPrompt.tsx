@@ -34,10 +34,10 @@ export default function ConnectWalletPrompt({ onConnect }: ConnectWalletPromptPr
           <p className="text-center text-sm text-gray-500 font-medium uppercase tracking-wide">Benefits:</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { icon: '💰', title: 'Test HYPER Tokens', desc: 'Claim free tokens to hire agents' },
-              { icon: '🤖', title: 'AI Agents', desc: 'Access DesignBot, CopyBot, and more' },
-              { icon: '✅', title: 'On-Chain Escrow', desc: 'Secure payments locked safely' },
-              { icon: '📊', title: 'Portfolio', desc: 'Track all your projects and results' },
+              { icon: '', title: 'Test HYPER Tokens', desc: 'Claim free tokens to hire agents' },
+              { icon: '', title: 'AI Agents', desc: 'Access DesignBot, CopyBot, and more' },
+              { icon: '', title: 'On-Chain Escrow', desc: 'Secure payments locked safely' },
+              { icon: '', title: 'Portfolio', desc: 'Track all your projects and results' },
             ].map((benefit, idx) => (
               <div key={idx} className="glass rounded-xl p-4 space-y-2">
                 <div className="text-2xl">{benefit.icon}</div>

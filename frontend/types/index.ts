@@ -22,6 +22,7 @@ export interface Deliverable {
   name: string;
   content: string;
   downloadUrl?: string;
+   agent?: string;
 }
 
 export interface Transaction {

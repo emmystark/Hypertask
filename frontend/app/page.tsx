@@ -3,31 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import WelcomeScreen from '@/components/WelcomeScreen';
 import ConnectWalletPrompt from '@/components/ConnectWalletPrompt';
+import ChatInterface from '@/components/ChatInterface';
+import DeliverableViewer from '@/components/DeliverableViewer';
 import AgentStatus from '@/components/AgentStatus';
-import ExecutionFeed from '@/components/ExecutionFeed';
-import TaskExecution from '@/components/TaskExecution';
-import ReviewDeliverablesModal from '@/components/ReviewDeliverablesModal';
-import ProjectCompleteModal from '@/components/ProjectCompleteModal';
-import { Agent, Task, Deliverable, Transaction, Project } from '@/types';
-import { hypertaskAPI, type ExecutionResult } from '@/services/api';
+import { Agent, Deliverable } from '@/types';
+import { hypertaskAPI } from '@/services/api';
 import { logger } from '@/utils/logger';
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false); // Start as false
-  const [balance, setBalance] = useState(500.00); // Give 500 on claim
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [balance, setBalance] = useState(500.00);
   const [lockedBalance, setLockedBalance] = useState(0);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [deliverables, setDeliverables] = useState<any[]>([]); // Use any[] to bypass type checking
   const [loading, setLoading] = useState(false);
+  const [executing, setExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
-
-  const [jobsCompleted] = useState(0);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [brandName, setBrandName] = useState<string>('');
 
   // Check API connection on mount
   useEffect(() => {
@@ -44,11 +40,13 @@ export default function Home() {
       if (isHealthy) {
         logger.success('HomePage', 'Connected to HyperTask API');
       } else {
-        logger.warn('HomePage', 'API not available, using demo mode');
+        logger.warn('HomePage', 'API not available');
+        setError('Backend API is not available. Please start the backend server.');
       }
     } catch (err) {
       setApiConnected(false);
       logger.error('HomePage', 'API health check failed', err);
+      setError('Cannot connect to backend. Make sure the API is running on http://localhost:8000');
     }
   };
 
@@ -67,279 +65,98 @@ export default function Home() {
           specialty: agent.specialty
         })));
       } else {
-        logger.warn('HomePage', 'No agents from API, using defaults');
-        // Use default agents as fallback
+        // Fallback agents
         setAgents([
-          { id: '1', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
-          { id: '2', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Copywriting' },
+          { id: 'designbot', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
+          { id: 'copybot', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Professional Copywriting' },
         ]);
       }
     } catch (err) {
       logger.error('HomePage', 'Failed to fetch agents', err);
       // Use default agents
       setAgents([
-        { id: '1', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
-        { id: '2', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Copywriting' },
+        { id: 'designbot', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
+        { id: 'copybot', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Professional Copywriting' },
       ]);
     }
   };
 
-  const startProject = async (prompt: string) => {
-    logger.info('HomePage', 'Starting new project', { prompt });
+  const handleTaskReady = async (convId: string) => {
+    if (!apiConnected) {
+      setError('Cannot execute: Backend API is not connected');
+      return;
+    }
+
+    setExecuting(true);
     setLoading(true);
     setError(null);
-
-    // Create initial project
-    const newProject: Project = {
-      id: Date.now().toString(),
-      userPrompt: prompt,
-      status: 'analyzing',
-      tasks: [
-        { id: '1', title: 'Analyzing request...', description: '', assignedTo: 'MANAGER', status: 'in-progress' }
-      ],
-      deliverables: [],
-      transaction: {
-        id: 'tx-' + Date.now(),
-        total: 70,
-        breakdown: [
-          { agent: 'DesignBot', amount: 50 },
-          { agent: 'CopyBot', amount: 20 },
-        ],
-        burnFee: 3.5,
-        status: 'pending',
-        txHash: '0x93...ab2'
-      }
-    };
-
-    setCurrentProject(newProject);
-    setLockedBalance(70);
+    setConversationId(convId);
+    
+    logger.info('HomePage', 'Executing tasks', { conversationId: convId });
 
     try {
-      logger.info('HomePage', 'Calling API execute endpoint', { projectId: newProject.id });
-      
-      // Call API using the service
-      const result = await hypertaskAPI.executeProject({
-        prompt: prompt,
-        context: {
-          brand_voice: 'professional and friendly',
-          design_style: 'modern minimalist',
-          colors: ['purple', 'cyan']
-        }
+      // Call the execute endpoint
+      const response = await fetch('http://localhost:8000/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: convId })
       });
-      
-      logger.success('HomePage', 'API execution successful', { deliverables: result.deliverables.length });
-      
-      // Update with real results
-      updateProjectWithResults(result, newProject);
-      
-    } catch (err) {
-      logger.error('HomePage', 'API execution failed', err);
-      setError('API connection failed - using demo mode');
-      // Fall back to demo
-      simulateDemoProject(newProject);
-    }
-  };
 
-  const updateProjectWithResults = (result: ExecutionResult, project: Project) => {
-    // Simulate progress with real data
-    setTimeout(() => {
-      setCurrentProject(prev => prev ? {
-        ...prev,
-        tasks: [
-          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
-          { id: '2', title: 'Manager analyzed request', description: '', assignedTo: 'MANAGER', status: 'completed' },
-          { id: '3', title: 'Dispatching to agents...', description: '', assignedTo: 'MANAGER', status: 'in-progress', progress: 30 },
-        ]
-      } : prev);
-    }, 1000);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
 
-    // Progress update
-    setTimeout(() => {
-      setCurrentProject(prev => prev ? {
-        ...prev,
-        tasks: [
-          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
-          { id: '2', title: 'Manager analyzed request', description: '', assignedTo: 'MANAGER', status: 'completed' },
-          { id: '3', title: 'DesignBot creating logo...', description: '', assignedTo: 'DesignBot', status: 'in-progress', progress: 60 },
-        ]
-      } : prev);
-    }, 2000);
+      const data = await response.json();
+      logger.success('HomePage', 'Execution completed', { 
+        deliverables: data.deliverables?.length || 0,
+        status: data.status 
+      });
 
-    // Final results update
-    setTimeout(() => {
-      const deliverables: Deliverable[] = result.deliverables.map((d: any) => ({
+      // Map deliverables - include all properties including agent
+      const mappedDeliverables = data.deliverables.map((d: any) => ({
         id: d.id,
-        type: d.type,
+        type: d.type === 'markdown' ? 'text' : d.type,
         name: d.name,
         content: d.content,
-        downloadUrl: d.type === 'image' ? '#' : undefined
+        downloadUrl: d.type === 'image' ? '#' : undefined,
+        metadata: d.metadata,
+        agent: d.agent || 'AI Agent' // Always include agent
       }));
 
-      const tasks: Task[] = [];
-      
-      // Build tasks based on deliverables
-      result.deliverables.forEach((d: any) => {
-        if (d.type === 'image') {
-          tasks.push({
-            id: d.id,
-            title: 'DesignBot completed logo',
-            description: '',
-            assignedTo: 'DesignBot',
-            status: 'completed'
-          });
-        } else if (d.type === 'text') {
-          tasks.push({
-            id: d.id,
-            title: 'CopyBot generated slogan',
-            description: '',
-            assignedTo: 'CopyBot',
-            status: 'completed'
-          });
-        }
-      });
+      setDeliverables(mappedDeliverables);
 
-      setCurrentProject(prev => prev ? {
-        ...prev,
-        status: 'review',
-        tasks: [
-          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
-          { id: '2', title: 'Manager analyzed request', description: '', assignedTo: 'MANAGER', status: 'completed' },
-          ...tasks,
-        ],
-        deliverables,
-        transaction: {
-          ...prev.transaction,
-          total: result.transaction.total,
-          breakdown: result.transaction.breakdown,
-          burnFee: result.transaction.burn_fee
-        }
-      } : prev);
-      
+      // Extract brand name from deliverables if available
+      if (data.deliverables.length > 0) {
+        const firstDeliverable = data.deliverables[0];
+        const extractedBrand = firstDeliverable.name?.split('_')[0] || 
+                              firstDeliverable.metadata?.brand_name || 
+                              'Your Brand';
+        setBrandName(extractedBrand);
+      }
+
+      // Calculate and lock balance
+      const totalCost = data.transaction?.total || 70;
+      setLockedBalance(totalCost);
+
+      // Simulate balance deduction
+      setTimeout(() => {
+        setBalance(prev => Math.max(0, prev - totalCost));
+        setLockedBalance(0);
+      }, 2000);
+
+    } catch (err: any) {
+      logger.error('HomePage', 'Execution failed', err);
+      setError(err.message || 'Failed to execute tasks. Please check the backend logs.');
+    } finally {
       setLoading(false);
-    }, 3500);
-  };
-
-  const simulateDemoProject = (project: Project) => {
-    setTimeout(() => {
-      setCurrentProject(prev => prev ? {
-        ...prev,
-        tasks: [
-          { id: '1', title: 'Escrow locked 70 HYPER', description: '', assignedTo: 'ESCROW', status: 'completed' },
-          { id: '2', title: 'Manager Agent analyzing...', description: '', assignedTo: 'MANAGER', status: 'completed' },
-        ]
-      } : prev);
-    }, 1000);
-
-    setTimeout(() => {
-      setCurrentProject(prev => prev ? {
-        ...prev,
-        tasks: [
-          ...prev.tasks,
-          { id: '3', title: 'DesignBot accepted task', description: '', assignedTo: 'DesignBot', status: 'completed' },
-        ],
-        deliverables: [
-          {
-            id: 'design',
-            type: 'image',
-            name: 'Logo.png',
-            content: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzhCNUNGNiIvPjx0ZXh0IHg9IjIwMCIgeT0iMjIwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Mb2dvPC90ZXh0Pjwvc3ZnPg==',
-            downloadUrl: '#'
-          }
-        ]
-      } : prev);
-    }, 2500);
-
-    setTimeout(() => {
-      setCurrentProject(prev => prev ? {
-        ...prev,
-        status: 'review',
-        tasks: [
-          ...prev.tasks,
-          { id: '4', title: 'CopyBot generated slogan', description: '', assignedTo: 'CopyBot', status: 'completed' },
-        ],
-        deliverables: [
-          ...prev.deliverables,
-          {
-            id: 'copy',
-            type: 'text',
-            name: 'Slogan',
-            content: 'Excellence in Every Detail'
-          }
-        ]
-      } : prev);
-      setLoading(false);
-    }, 4000);
-  };
-
-  const handleApproveFromExecution = () => {
-    setShowReviewModal(true);
-  };
-
-  const handleApprove = () => {
-    if (!currentProject) return;
-    
-    logger.info('HomePage', 'Project approved', { projectId: currentProject.id });
-    
-    setShowReviewModal(false);
-    setCurrentProject(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        status: 'completed',
-        transaction: { ...prev.transaction, status: 'completed' }
-      };
-    });
-    setLockedBalance(0);
-    
-    // Save to history
-    try {
-      const existing = localStorage.getItem('hypertask_history');
-      const history = existing ? JSON.parse(existing) : [];
-      
-      history.push({
-        id: currentProject.id,
-        prompt: currentProject.userPrompt,
-        status: 'completed',
-        timestamp: new Date().toLocaleString(),
-        cost: currentProject.transaction.total,
-        deliverables: currentProject.deliverables.map(d => ({ type: d.type, name: d.name }))
-      });
-      
-      localStorage.setItem('hypertask_history', JSON.stringify(history));
-      logger.success('HomePage', 'Project saved to history');
-    } catch (error) {
-      logger.error('HomePage', 'Failed to save to history', error);
+      setExecuting(false);
     }
-    
-    setTimeout(() => {
-      setShowCompleteModal(true);
-    }, 500);
-  };
-
-  const handleStartNew = () => {
-    setShowCompleteModal(false);
-    setCurrentProject(null);
-    setError(null);
-  };
-
-  const handleRevision = () => {
-    logger.info('HomePage', 'Revision requested', { projectId: currentProject?.id });
-    setShowReviewModal(false);
-    alert('Revision requested - agents will rework deliverables');
-  };
-
-  const handleReject = () => {
-    logger.info('HomePage', 'Project rejected', { projectId: currentProject?.id });
-    setShowReviewModal(false);
-    setCurrentProject(null);
-    setLockedBalance(0);
-    alert('Payment refunded - project cancelled');
   };
 
   const handleConnect = () => {
     logger.info('HomePage', 'Wallet connected');
     setWalletConnected(true);
-    setBalance(500.00); // Give initial test tokens
+    setBalance(500.00);
   };
 
   const handleClaimHyper = () => {
@@ -353,95 +170,148 @@ export default function Home() {
     });
   };
 
+  const handleClearResults = () => {
+    setDeliverables([]);
+    setConversationId(null);
+    setError(null);
+    setBrandName('');
+  };
+
   return (
     <div className="min-h-screen flex animated-bg cyber-grid-bg">
-      {walletConnected && <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
+      {walletConnected && (
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onToggle={() => setSidebarOpen(!sidebarOpen)} 
+        />
+      )}
       
       <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
         <Header
           connected={walletConnected}
           balance={balance}
           lockedBalance={lockedBalance}
-          address={walletConnected ? "XXX...YYYY" : undefined}
-          txHash={currentProject?.transaction.txHash}
+          address={walletConnected ? "0x1234...5678" : undefined}
+          txHash={conversationId ? `0x${conversationId.substring(0, 8)}...` : undefined}
           onClaimHyper={handleClaimHyper}
         />
 
-        <main className="flex-1">
+        <main className="flex-1 p-4 lg:p-6">
           {!walletConnected ? (
             <ConnectWalletPrompt onConnect={handleConnect} />
-          ) : !currentProject ? (
-            <div>
-              <WelcomeScreen onSubmit={startProject} />
-              
-              {error && (
-                <div className="fixed bottom-4 right-4 bg-accent-orange/20 border border-accent-orange/50 rounded-xl p-4 max-w-md">
-                  <div className="flex items-center gap-2">
-                    <span className="text-accent-orange">⚠️</span>
-                    <span className="text-sm">{error}</span>
+          ) : (
+            <div className="max-w-7xl mx-auto">
+              {/* API Status Banner */}
+              {!apiConnected && (
+                <div className="mb-4 glass rounded-xl p-4 border border-accent-orange/50 bg-accent-orange/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-accent-orange mb-1">Backend Not Connected</h3>
+                      <p className="text-sm text-gray-400">
+                        Start the backend: <code className="bg-dark-700 px-2 py-1 rounded text-xs">python3 api/main.py</code>
+                      </p>
+                    </div>
+                    <button
+                      onClick={checkApiConnection}
+                      className="px-4 py-2 rounded-lg glass border border-primary/30 hover:border-primary/50 transition-all text-sm"
+                    >
+                      Retry
+                    </button>
                   </div>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="p-4 lg:p-6">
-              <div className="max-w-7xl mx-auto">
-                {loading && (
-                  <div className="mb-4 glass rounded-xl p-4 text-center">
-                    <div className="spinner w-6 h-6 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">AI agents working...</p>
+
+              {/* Error Display */}
+              {error && (
+                <div className="mb-4 glass rounded-xl p-4 border border-red-500/50 bg-red-500/10">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">❌</span>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-red-400 mb-1">Error</h3>
+                      <p className="text-sm text-gray-300">{error}</p>
+                    </div>
+                    <button
+                      onClick={() => setError(null)}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
-                
-                <div className="grid lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <TaskExecution
-                      userPrompt={currentProject.userPrompt}
-                      tasks={currentProject.tasks}
-                      deliverables={currentProject.deliverables}
-                      onApprove={handleApproveFromExecution}
+                </div>
+              )}
+
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Chat Section */}
+                <div className="glass rounded-xl border border-primary/20 h-[600px] lg:h-[700px] flex flex-col">
+                  <div className="p-4 border-b border-primary/20">
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                      💬 HyperTask AI Assistant
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Tell me what you need, and I'll coordinate the AI agents
+                    </p>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <ChatInterface 
+                      onTaskReady={handleTaskReady}
+                      apiUrl="http://localhost:8000"
                     />
+                  </div>
+                </div>
+
+                {/* Results Section */}
+                <div className="space-y-6">
+                  {/* Deliverables */}
+                  <div className="glass rounded-xl border border-primary/20 p-4 min-h-[400px] max-h-[500px] overflow-y-auto">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        📦 Deliverables
+                      </h2>
+                      {deliverables.length > 0 && (
+                        <button
+                          onClick={handleClearResults}
+                          className="text-xs px-3 py-1.5 rounded-lg glass border border-primary/20 hover:border-primary/50 transition-all"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    {loading || executing ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="relative">
+                          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-2xl">🤖</span>
+                          </div>
+                        </div>
+                        <p className="mt-4 text-gray-400 text-sm">Creating your deliverables...</p>
+                        <p className="mt-2 text-gray-500 text-xs">AI agents are working</p>
+                      </div>
+                    ) : deliverables.length > 0 ? (
+                      <DeliverableViewer deliverables={deliverables as any} brandName={brandName} />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="text-6xl mb-4 opacity-50">📦</div>
+                        <p className="text-gray-400 text-sm">Your deliverables will appear here</p>
+                        <p className="text-gray-500 text-xs mt-2">Start a conversation to create something amazing!</p>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-6">
-                    <ExecutionFeed
-                      tasks={currentProject.tasks}
-                      escrowAmount={lockedBalance}
-                    />
-                    <AgentStatus
-                      agents={agents}
-                      escrowLocked={lockedBalance}
-                      jobsCompleted={jobsCompleted}
-                    />
-                  </div>
+                  {/* Agent Status */}
+                  <AgentStatus
+                    agents={agents}
+                    escrowLocked={lockedBalance}
+                    jobsCompleted={0}
+                  />
                 </div>
               </div>
             </div>
           )}
         </main>
       </div>
-
-      {currentProject && (
-        <>
-          <ReviewDeliverablesModal
-            isOpen={showReviewModal}
-            onClose={() => setShowReviewModal(false)}
-            deliverables={currentProject.deliverables}
-            transaction={currentProject.transaction}
-            onApprove={handleApprove}
-            onRevision={handleRevision}
-            onReject={handleReject}
-          />
-
-          <ProjectCompleteModal
-            isOpen={showCompleteModal}
-            onClose={() => setShowCompleteModal(false)}
-            deliverables={currentProject.deliverables}
-            transaction={currentProject.transaction}
-            onStartNew={handleStartNew}
-          />
-        </>
-      )}
     </div>
   );
 }

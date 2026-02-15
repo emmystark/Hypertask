@@ -74,15 +74,15 @@ export default function ReviewDeliverablesModal({
                       {deliverable.type === 'image' && (
                         <>
                           <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-dark-700 hover:bg-primary/20 transition-colors text-sm font-medium">
-                            <span>👁️</span> View Fullscreen
+                            <span></span> View Fullscreen
                           </button>
-                          <button className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-dark-700 hover:bg-primary/20 transition-colors text-sm font-medium">
+                          {/* <button className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-dark-700 hover:bg-primary/20 transition-colors text-sm font-medium">
                             <Download size={16} />
                             Download
-                          </button>
+                          </button> */}
                         </>
                       )}
-                      {deliverable.type === 'text' && (
+                      {/* {deliverable.type === 'text' && (
                         <>
                           <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-dark-700 hover:bg-primary/20 transition-colors text-sm font-medium">
                             <Copy size={16} />
@@ -92,7 +92,7 @@ export default function ReviewDeliverablesModal({
                             Export (.txt)
                           </button>
                         </>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 ))}
@@ -135,7 +135,7 @@ export default function ReviewDeliverablesModal({
                     <span className="text-gray-400 flex-1">Burn Fee (5%):</span>
                     <span className="font-medium flex items-center gap-1">
                       {transaction.burnFee} HYPER
-                      <span className="text-accent-orange">🔥</span>
+                      <span className="text-accent-orange"></span>
                     </span>
                   </div>
                   

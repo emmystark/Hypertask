@@ -86,7 +86,7 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
             className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold text-base sm:text-lg hover:scale-105 transition-all duration-300 shadow-lg shadow-primary/50"
           >
             <MessageCircle size={20} />
-            Chat with AI Assistant
+            Chat with our Assistant
           </button>
           <p className="text-xs sm:text-sm text-gray-500 mt-2">
             Or use quick start below
@@ -94,7 +94,7 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
         </div>
 
         {/* Example Prompts */}
-        <div className="space-y-3 px-2">
+        {/* <div className="space-y-3 px-2">
           <p className="text-xs sm:text-sm text-gray-500 font-medium">Quick Start Examples:</p>
           <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {examplePrompts.map((example, index) => (
@@ -112,10 +112,10 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
               </button>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Input Form */}
-        <form onSubmit={handleSubmit} className="relative px-2">
+        {/* <form onSubmit={handleSubmit} className="relative px-2">
           <div className="glass rounded-2xl border-2 border-primary/30 focus-within:border-primary focus-within:shadow-lg focus-within:shadow-primary/20 transition-all duration-300">
             <input
               type="text"
@@ -132,10 +132,10 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
               <Send size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
-        </form>
+        </form> */}
 
         {/* Demo Button */}
-        <div className="text-center px-2">
+        {/* <div className="text-center px-2">
           <button
             onClick={() => onSubmit("Launch a coffee brand called 'JavaJoy'")}
             className="inline-flex items-center gap-2 glass px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-primary/20 transition-all duration-300 group text-sm sm:text-base"
@@ -143,10 +143,10 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
             <Sparkles className="text-primary group-hover:rotate-12 transition-transform" size={16} />
             <span className="font-medium">Run Demo Task</span>
           </button>
-        </div>
+        </div> */}
 
         {/* Stats Bar */}
-        <div className="glass rounded-2xl p-4 sm:p-6 mx-2">
+        {/* <div className="glass rounded-2xl p-4 sm:p-6 mx-2">
           <div className="grid grid-cols-3 gap-3 sm:gap-4 text-center">
             <div>
               <div className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text">145K</div>
@@ -161,7 +161,7 @@ export default function WelcomeScreen({ onSubmit }: WelcomeScreenProps) {
               <div className="text-[10px] sm:text-xs md:text-sm text-gray-400 mt-1">Jobs Done</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

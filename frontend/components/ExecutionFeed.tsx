@@ -44,7 +44,7 @@ export default function ExecutionFeed({ tasks, escrowAmount }: ExecutionFeedProp
             <div className="relative z-10">
               <Zap size={32} className="mx-auto mb-3 text-primary opacity-60" />
               <p className="font-medium text-sm mb-1">System Online</p>
-              <p className="text-xs text-gray-500">Manager Agent ready 🤖</p>
+              <p className="text-xs text-gray-500">Manager Agent ready </p>
               <p className="text-xs text-gray-600 mt-2">Waiting for task...</p>
             </div>
           </div>

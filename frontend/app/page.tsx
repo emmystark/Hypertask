@@ -7,7 +7,8 @@ import ConnectWalletPrompt from '@/components/ConnectWalletPrompt';
 import ChatInterface from '@/components/ChatInterface';
 import DeliverableViewer from '@/components/DeliverableViewer';
 import AgentStatus from '@/components/AgentStatus';
-import { Agent, Deliverable } from '@/types';
+import PaymentReleaseModal from '@/components/PaymentReleaseModal';
+import { Agent } from '@/types';
 import { hypertaskAPI } from '@/services/api';
 import { logger } from '@/utils/logger';
 
@@ -17,13 +18,18 @@ export default function Home() {
   const [balance, setBalance] = useState(500.00);
   const [lockedBalance, setLockedBalance] = useState(0);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [deliverables, setDeliverables] = useState<any[]>([]); // Use any[] to bypass type checking
+  const [deliverables, setDeliverables] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [brandName, setBrandName] = useState<string>('');
+  
+  // Payment flow states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentReleased, setPaymentReleased] = useState(false);
+  const [transactionDetails, setTransactionDetails] = useState<any>(null);
 
   // Check API connection on mount
   useEffect(() => {
@@ -65,7 +71,6 @@ export default function Home() {
           specialty: agent.specialty
         })));
       } else {
-        // Fallback agents
         setAgents([
           { id: 'designbot', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
           { id: 'copybot', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Professional Copywriting' },
@@ -73,7 +78,6 @@ export default function Home() {
       }
     } catch (err) {
       logger.error('HomePage', 'Failed to fetch agents', err);
-      // Use default agents
       setAgents([
         { id: 'designbot', name: 'DesignBot', icon: '🎨', cost: 50, status: 'idle', specialty: 'Logo & Graphics' },
         { id: 'copybot', name: 'CopyBot', icon: '📝', cost: 20, status: 'idle', specialty: 'Professional Copywriting' },
@@ -91,11 +95,11 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setConversationId(convId);
+    setPaymentReleased(false); // Reset payment state
     
     logger.info('HomePage', 'Executing tasks', { conversationId: convId });
 
     try {
-      // Call the execute endpoint
       const response = await fetch('http://localhost:8000/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -112,7 +116,7 @@ export default function Home() {
         status: data.status 
       });
 
-      // Map deliverables - include all properties including agent
+      // Map deliverables with agent
       const mappedDeliverables = data.deliverables.map((d: any) => ({
         id: d.id,
         type: d.type === 'markdown' ? 'text' : d.type,
@@ -120,12 +124,12 @@ export default function Home() {
         content: d.content,
         downloadUrl: d.type === 'image' ? '#' : undefined,
         metadata: d.metadata,
-        agent: d.agent || 'AI Agent' // Always include agent
+        agent: d.agent || 'AI Agent'
       }));
 
       setDeliverables(mappedDeliverables);
 
-      // Extract brand name from deliverables if available
+      // Extract brand name
       if (data.deliverables.length > 0) {
         const firstDeliverable = data.deliverables[0];
         const extractedBrand = firstDeliverable.name?.split('_')[0] || 
@@ -134,15 +138,22 @@ export default function Home() {
         setBrandName(extractedBrand);
       }
 
-      // Calculate and lock balance
+      // Store transaction details
       const totalCost = data.transaction?.total || 70;
+      setTransactionDetails({
+        total: totalCost,
+        breakdown: data.transaction?.breakdown || [],
+        burnFee: data.transaction?.burn_fee || totalCost * 0.05,
+        txHash: `0x${convId.substring(0, 8)}...`
+      });
+
+      // Lock balance (escrow)
       setLockedBalance(totalCost);
 
-      // Simulate balance deduction
+      // Show payment modal after deliverables are ready
       setTimeout(() => {
-        setBalance(prev => Math.max(0, prev - totalCost));
-        setLockedBalance(0);
-      }, 2000);
+        setShowPaymentModal(true);
+      }, 1000);
 
     } catch (err: any) {
       logger.error('HomePage', 'Execution failed', err);
@@ -151,6 +162,38 @@ export default function Home() {
       setLoading(false);
       setExecuting(false);
     }
+  };
+
+  const handleReleasePayment = () => {
+    logger.info('HomePage', 'Releasing payment', { amount: lockedBalance });
+    
+    // Simulate payment release (in production, this would be a blockchain transaction)
+    setPaymentReleased(true);
+    
+    // Deduct from balance
+    setBalance(prev => Math.max(0, prev - lockedBalance));
+    
+    // Release locked balance
+    setTimeout(() => {
+      setLockedBalance(0);
+      setShowPaymentModal(false);
+    }, 1500);
+
+    logger.success('HomePage', 'Payment released to agents');
+  };
+
+  const handleRejectPayment = () => {
+    logger.info('HomePage', 'Payment rejected - refunding');
+    
+    // Clear deliverables
+    setDeliverables([]);
+    setPaymentReleased(false);
+    setShowPaymentModal(false);
+    
+    // Release escrow
+    setLockedBalance(0);
+    
+    logger.info('HomePage', 'Escrow released - no charges');
   };
 
   const handleConnect = () => {
@@ -175,6 +218,8 @@ export default function Home() {
     setConversationId(null);
     setError(null);
     setBrandName('');
+    setPaymentReleased(false);
+    setTransactionDetails(null);
   };
 
   return (
@@ -268,7 +313,7 @@ export default function Home() {
                       <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                         📦 Deliverables
                       </h2>
-                      {deliverables.length > 0 && (
+                      {deliverables.length > 0 && paymentReleased && (
                         <button
                           onClick={handleClearResults}
                           className="text-xs px-3 py-1.5 rounded-lg glass border border-primary/20 hover:border-primary/50 transition-all"
@@ -290,7 +335,23 @@ export default function Home() {
                         <p className="mt-2 text-gray-500 text-xs">AI agents are working</p>
                       </div>
                     ) : deliverables.length > 0 ? (
-                      <DeliverableViewer deliverables={deliverables as any} brandName={brandName} />
+                      !paymentReleased ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                          <div className="text-6xl mb-4">🔒</div>
+                          <h3 className="text-lg font-bold text-accent-orange mb-2">Payment Required</h3>
+                          <p className="text-gray-400 text-sm mb-4">
+                            Review and release payment to access your deliverables
+                          </p>
+                          <button
+                            onClick={() => setShowPaymentModal(true)}
+                            className="px-6 py-3 rounded-lg bg-gradient-to-r from-primary to-secondary text-white font-semibold hover:scale-105 transition-all"
+                          >
+                            Review & Release Payment
+                          </button>
+                        </div>
+                      ) : (
+                        <DeliverableViewer deliverables={deliverables as any} brandName={brandName} />
+                      )
                     ) : (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
                         <div className="text-6xl mb-4 opacity-50">📦</div>
@@ -312,6 +373,19 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      {/* Payment Release Modal */}
+      {showPaymentModal && transactionDetails && (
+        <PaymentReleaseModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          deliverables={deliverables}
+          transaction={transactionDetails}
+          onRelease={handleReleasePayment}
+          onReject={handleRejectPayment}
+          paymentReleased={paymentReleased}
+        />
+      )}
     </div>
   );
 }

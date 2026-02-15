@@ -103,7 +103,7 @@ export default function ChatInterface({ onTaskReady, apiUrl }: ChatInterfaceProp
         setTimeout(() => {
           const confirmMessage: Message = {
             role: 'assistant',
-            content: '✅ **Ready to go!** I have all the details I need.\n\nClick **"Start Task"** below to begin creating your deliverables!',
+            content: ' **Ready to go!** I have all the details I need.\n\nClick **"Start Task"** below to begin creating your deliverables!',
             timestamp: Date.now(),
             formatted: true
           };
@@ -116,7 +116,7 @@ export default function ChatInterface({ onTaskReady, apiUrl }: ChatInterfaceProp
       
       const errorMessage: Message = {
         role: 'assistant',
-        content: `⚠️ **Connection Issue**\n\nI'm having trouble connecting to the backend at:\n\`${API_URL}\`\n\n**Please make sure:**\n1. Backend is running: \`python3 api/main.py\`\n2. API is accessible at the URL above\n3. CORS is properly configured\n\n**Try these examples:**\n- "Create a modern logo for my fintech startup called PayEasy"\n- "Write a landing page for my SaaS project management tool"\n- "I need a pitch deck for my AI startup"`,
+        content: ` **Connection Issue**\n\nI'm having trouble connecting to the backend at:\n\`${API_URL}\`\n\n**Please make sure:**\n1. Backend is running: \`python3 api/main.py\`\n2. API is accessible at the URL above\n3. CORS is properly configured\n\n**Try these examples:**\n- "Create a modern logo for my fintech startup called PayEasy"\n- "Write a landing page for my SaaS project management tool"\n- "I need a pitch deck for my AI startup"`,
         timestamp: Date.now(),
         formatted: true
       };
@@ -265,7 +265,7 @@ export default function ChatInterface({ onTaskReady, apiUrl }: ChatInterfaceProp
               onClick={() => setInput("Create a pitch deck for investors")}
               className="text-xs px-3 py-1.5 rounded-full glass border border-primary/20 hover:border-primary/50 transition-all"
             >
-              📊 Pitch deck
+               Pitch deck
             </button>
           </div>
         )}
